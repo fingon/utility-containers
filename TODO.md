@@ -11,7 +11,7 @@ The original behavior is implemented. The Debian stable migration described in
   CI image references from the Alpine and Ubuntu bases to Debian stable.
 - [x] Publish both images as `debian` and `latest`; stop updating
   `nfcapd:alpine` and `samba:24.04` without repointing those legacy tags.
-- [ ] Build and integration-test the Debian images on native amd64 and arm64,
+- [x] Build and integration-test the Debian images on native amd64 and arm64,
   including content-key changes across upstream base and package updates.
 - [ ] Update README usage examples and published-tag documentation after the
   migrated images are implemented and verified.
