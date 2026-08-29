@@ -1,0 +1,20 @@
+FROM ubuntu:24.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends samba \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir --parents /run/samba /share
+
+COPY smb.conf /etc/samba/smb.conf
+COPY --chmod=0755 entrypoint.sh /usr/local/bin/entrypoint.sh
+
+ARG CONTENT_KEY=""
+LABEL org.opencontainers.image.content-key="${CONTENT_KEY}"
+
+VOLUME /share
+
+EXPOSE 445/tcp 139/tcp
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

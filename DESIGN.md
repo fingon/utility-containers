@@ -59,18 +59,19 @@ retaining the `nfcapd` entrypoint.
 
 ## Samba image
 
-The Samba image will track Ubuntu 24.04 and install Samba from the distribution
-repository. It will expose TCP ports 445 and 139 and use `/share` for persistent
+The Samba image tracks Ubuntu 24.04 and installs Samba from the distribution
+repository. It exposes TCP ports 445 and 139 and uses `/share` for persistent
 data.
 
-The generated Samba configuration will preserve the example's behavior:
+The image's Samba configuration preserves the example's behavior:
 
 - standalone server in the `WORKGROUP` workgroup;
 - SMB2 as the minimum protocol;
 - one browseable, writable share named `share` backed by `/share`;
 - guest access and `Bad User` guest mapping;
 - file and directory creation masks of `0700`; and
-- `smbd` in foreground mode with debug output written to standard output.
+- `smbd` in foreground mode with debug output written to standard output; and
+- `org.opencontainers.image.content-key` stores the build content key.
 
 The image will start as root because Samba must initialize its local account
 and drop privileges for client sessions. Binding host ports below 1024 may also
