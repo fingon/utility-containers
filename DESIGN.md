@@ -2,10 +2,10 @@
 
 ## Status
 
-The repository tooling, container images, and publishing workflow are
-implemented. The migration from the current Alpine and Ubuntu bases to Debian's
-stable channel is designed but not implemented. [TODO.md](TODO.md) records the
-remaining migration work.
+The repository tooling, container images, publishing workflow, and migration to
+Debian's stable channel are implemented. The workflow publishes the Debian
+images after a successful native build-and-test matrix. [TODO.md](TODO.md)
+records the implementation backlog.
 
 ## Goals
 

@@ -1,7 +1,7 @@
 # Implementation backlog
 
-The original behavior is implemented. The Debian stable migration described in
-[DESIGN.md](DESIGN.md) remains to be implemented.
+The original behavior and the Debian stable migration described in
+[DESIGN.md](DESIGN.md) are implemented.
 
 ## Debian stable migration
 
@@ -13,7 +13,7 @@ The original behavior is implemented. The Debian stable migration described in
   `nfcapd:alpine` and `samba:24.04` without repointing those legacy tags.
 - [x] Build and integration-test the Debian images on native amd64 and arm64,
   including content-key changes across upstream base and package updates.
-- [ ] Update README usage examples and published-tag documentation after the
+- [x] Update README usage examples and published-tag documentation after the
   migrated images are implemented and verified.
 
 ## Repository tooling
