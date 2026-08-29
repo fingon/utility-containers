@@ -84,13 +84,13 @@ jobs:
           else
             make build-nfcapd
             podman save --output "$RUNNER_TEMP/utility-nfcapd-${{ matrix.architecture }}.tar" \
-              localhost/utility-containers/nfcapd:alpine
+              localhost/utility-containers/nfcapd:debian
           fi
 
       - name: Test nfcapd image
         env:
           ENGINE: podman
-          IMAGE: localhost/utility-containers/nfcapd:alpine
+          IMAGE: localhost/utility-containers/nfcapd:debian
           ITEST_DIAG_DIR: ${{ runner.temp }}/integration-diagnostics
         run: ./nfcapd/test-integration.sh
 
@@ -104,13 +104,13 @@ jobs:
           else
             make build-samba
             podman save --output "$RUNNER_TEMP/utility-samba-${{ matrix.architecture }}.tar" \
-              localhost/utility-containers/samba:24.04
+              localhost/utility-containers/samba:debian
           fi
 
       - name: Test Samba image
         env:
           ENGINE: podman
-          IMAGE: localhost/utility-containers/samba:24.04
+          IMAGE: localhost/utility-containers/samba:debian
           ITEST_DIAG_DIR: ${{ runner.temp }}/integration-diagnostics
         run: ./samba/test-integration.sh
 

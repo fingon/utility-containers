@@ -8,8 +8,8 @@ readonly registry="${REGISTRY:-ghcr.io}"
 readonly engine_name="${ENGINE:-podman}"
 readonly engine_command=("${engine_name}")
 readonly platforms=(amd64 arm64)
-readonly nfcapd_source=localhost/utility-containers/nfcapd:alpine
-readonly samba_source=localhost/utility-containers/samba:24.04
+readonly nfcapd_source=localhost/utility-containers/nfcapd:debian
+readonly samba_source=localhost/utility-containers/samba:debian
 
 load_platform_images() {
     local platform archive

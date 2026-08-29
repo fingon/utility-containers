@@ -10,18 +10,15 @@ readonly jq_command="${JQ:-jq}"
 
 context=""
 base_reference=""
-package_manager=""
 packages=()
 
 case "${image_name}" in
 nfcapd)
     context=nfcapd
-    package_manager=apk
-    packages=(nfdump shadow)
+    packages=(nfdump)
     ;;
 samba)
     context=samba
-    package_manager=apt
     packages=(samba)
     ;;
 *)
@@ -63,42 +60,23 @@ base_digest="$(printf '%s' "${raw_manifest}" | "${jq_command}" -er \
     end')"
 base_image="${registry_reference}@${base_digest}"
 
-case "${package_manager}" in
-apk)
-    package_versions="$("${engine_command[@]}" run --rm \
-        --platform "linux/${target_arch}" \
-        --entrypoint /bin/sh "${base_image}" \
-        -c '
-                set -eu
-                apk update >/dev/null
-                apk add --no-cache "$@" >/dev/null
-                apk info -v | sort
-            ' sh "${packages[@]}")"
-    ;;
-apt)
-    # shellcheck disable=SC2016
-    package_versions="$("${engine_command[@]}" run --rm \
-        --platform "linux/${target_arch}" \
-        --entrypoint /bin/bash "${base_image}" \
-        -c '
-                set -eu -o pipefail
-                export DEBIAN_FRONTEND=noninteractive
-                apt-get update >/dev/null
-                apt-get -s install --no-install-recommends --yes "$@" |
-                    awk '\''$1 == "Inst" {
-                        version = $3
-                        sub(/^[[(]/, "", version)
-                        sub(/[)]]$/, "", version)
-                        print $2 "=" version
-                    }'\'' |
-                    sort
-            ' bash "${packages[@]}")"
-    ;;
-*)
-    printf 'unsupported package manager: %s\n' "${package_manager}" >&2
-    exit 1
-    ;;
-esac
+# shellcheck disable=SC2016
+package_versions="$("${engine_command[@]}" run --rm \
+    --platform "linux/${target_arch}" \
+    --entrypoint /bin/bash "${base_image}" \
+    -c '
+            set -eu -o pipefail
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update >/dev/null
+            apt-get -s install --no-install-recommends --yes "$@" |
+                awk '\''$1 == "Inst" {
+                    version = $3
+                    sub(/^[[(]/, "", version)
+                    sub(/[)]]$/, "", version)
+                    print $2 "=" version
+                }'\'' |
+                sort
+        ' bash "${packages[@]}")"
 if [[ -z "${package_versions}" ]]; then
     printf 'no package versions resolved for %s\n' "${image_name}" >&2
     exit 1

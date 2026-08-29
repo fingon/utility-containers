@@ -7,7 +7,7 @@ The original behavior is implemented. The Debian stable migration described in
 
 - [x] Move both images to `debian:stable-slim`, install their packages with APT,
   and preserve the existing runtime interfaces and Samba account defaults.
-- [ ] Update local builds, integration-test clients, content-key resolution, and
+- [x] Update local builds, integration-test clients, content-key resolution, and
   CI image references from the Alpine and Ubuntu bases to Debian stable.
 - [ ] Publish both images as `debian` and `latest`; stop updating
   `nfcapd:alpine` and `samba:24.04` without repointing those legacy tags.

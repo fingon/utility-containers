@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 readonly engine_name="${ENGINE:-podman}"
 readonly image_name="${IMAGE:?IMAGE must be set}"
-readonly client_image="${CLIENT_IMAGE:-ubuntu:24.04}"
+readonly client_image="${CLIENT_IMAGE:-debian:stable-slim}"
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 readonly script_dir
 workspace_dir="$(cd -- "${script_dir}/.." && pwd)"
