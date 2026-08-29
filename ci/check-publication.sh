@@ -140,9 +140,9 @@ check_tag() {
     done
 }
 
-check_tag nfcapd alpine
+check_tag nfcapd debian
 check_tag nfcapd latest
-check_tag samba 24.04
+check_tag samba debian
 check_tag samba latest
 
 printf 'needed=%s\n' "${publication_needed}"

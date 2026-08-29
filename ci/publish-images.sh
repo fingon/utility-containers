@@ -67,5 +67,5 @@ push_manifests() {
 
 load_platform_images
 push_staging_images
-push_manifests "localhost/utility-nfcapd-manifest:${run_tag}" nfcapd alpine
-push_manifests "localhost/utility-samba-manifest:${run_tag}" samba 24.04
+push_manifests "localhost/utility-nfcapd-manifest:${run_tag}" nfcapd debian
+push_manifests "localhost/utility-samba-manifest:${run_tag}" samba debian

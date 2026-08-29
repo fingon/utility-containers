@@ -9,7 +9,7 @@ The original behavior is implemented. The Debian stable migration described in
   and preserve the existing runtime interfaces and Samba account defaults.
 - [x] Update local builds, integration-test clients, content-key resolution, and
   CI image references from the Alpine and Ubuntu bases to Debian stable.
-- [ ] Publish both images as `debian` and `latest`; stop updating
+- [x] Publish both images as `debian` and `latest`; stop updating
   `nfcapd:alpine` and `samba:24.04` without repointing those legacy tags.
 - [ ] Build and integration-test the Debian images on native amd64 and arm64,
   including content-key changes across upstream base and package updates.
