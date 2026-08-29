@@ -31,8 +31,8 @@ The behavior in [DESIGN.md](DESIGN.md) is planned but not yet implemented.
 ## Publishing
 
 - [x] Add pull-request, main-branch, daily, and manual GitHub Actions triggers.
-- Resolve per-platform base digests and package versions, hash local inputs, and
-  store the resulting content key as OCI metadata.
+- [x] Resolve per-platform base digests and package versions, hash local inputs,
+  and store the resulting content key as OCI metadata.
 - Cache images by content key while still testing every candidate image.
 - Build and test on native amd64 and arm64 runners, then publish run-specific
   staging tags and atomically update the multi-platform public tags.

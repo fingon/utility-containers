@@ -32,7 +32,7 @@ jobs:
       - name: Install container and test tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends netcat-openbsd podman xxd
+          sudo apt-get install -y --no-install-recommends jq netcat-openbsd podman skopeo xxd
 
       - name: Install prek
         run: pipx install prek==0.5.0
@@ -40,5 +40,22 @@ jobs:
       - name: Lint
         run: make lint
 
+      - name: Resolve nfcapd content key
+        id: nfcapd-meta
+        env:
+          TARGET_ARCH: amd64
+        run: ./ci/content-key.sh nfcapd "${TARGET_ARCH}" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve Samba content key
+        id: samba-meta
+        env:
+          TARGET_ARCH: amd64
+        run: ./ci/content-key.sh samba "${TARGET_ARCH}" >> "$GITHUB_OUTPUT"
+
       - name: Build and test
+        env:
+          NFCAPD_BASE_IMAGE: ${{ steps.nfcapd-meta.outputs.base_image }}
+          NFCAPD_CONTENT_KEY: ${{ steps.nfcapd-meta.outputs.key }}
+          SAMBA_BASE_IMAGE: ${{ steps.samba-meta.outputs.base_image }}
+          SAMBA_CONTENT_KEY: ${{ steps.samba-meta.outputs.key }}
         run: make test

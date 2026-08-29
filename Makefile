@@ -1,13 +1,18 @@
 ENGINE ?= podman
 IMAGE_PREFIX ?= localhost/utility-containers
+CONTENT_KEY ?=
 
 NFCAPD_CONTEXT ?= nfcapd
 NFCAPD_CONTAINERFILE ?= $(NFCAPD_CONTEXT)/Containerfile
 NFCAPD_IMAGE ?= $(IMAGE_PREFIX)/nfcapd:alpine
+NFCAPD_BASE_IMAGE ?= alpine:latest
+NFCAPD_CONTENT_KEY ?= $(CONTENT_KEY)
 
 SAMBA_CONTEXT ?= samba
 SAMBA_CONTAINERFILE ?= $(SAMBA_CONTEXT)/Containerfile
 SAMBA_IMAGE ?= $(IMAGE_PREFIX)/samba:24.04
+SAMBA_BASE_IMAGE ?= ubuntu:24.04
+SAMBA_CONTENT_KEY ?= $(CONTENT_KEY)
 
 .DEFAULT_GOAL := help
 
@@ -16,10 +21,16 @@ SAMBA_IMAGE ?= $(IMAGE_PREFIX)/samba:24.04
 build: build-nfcapd build-samba
 
 build-nfcapd:
-	$(ENGINE) build --file $(NFCAPD_CONTAINERFILE) --tag $(NFCAPD_IMAGE) $(NFCAPD_CONTEXT)
+	$(ENGINE) build \
+		--build-arg BASE_IMAGE=$(NFCAPD_BASE_IMAGE) \
+		$(if $(NFCAPD_CONTENT_KEY),--build-arg CONTENT_KEY=$(NFCAPD_CONTENT_KEY),) \
+		--file $(NFCAPD_CONTAINERFILE) --tag $(NFCAPD_IMAGE) $(NFCAPD_CONTEXT)
 
 build-samba:
-	$(ENGINE) build --file $(SAMBA_CONTAINERFILE) --tag $(SAMBA_IMAGE) $(SAMBA_CONTEXT)
+	$(ENGINE) build \
+		--build-arg BASE_IMAGE=$(SAMBA_BASE_IMAGE) \
+		$(if $(SAMBA_CONTENT_KEY),--build-arg CONTENT_KEY=$(SAMBA_CONTENT_KEY),) \
+		--file $(SAMBA_CONTAINERFILE) --tag $(SAMBA_IMAGE) $(SAMBA_CONTEXT)
 
 test: test-nfcapd test-samba
 
@@ -48,4 +59,7 @@ help:
 		'  ENGINE=$(ENGINE)' \
 		'  IMAGE_PREFIX=$(IMAGE_PREFIX)' \
 		'  NFCAPD_IMAGE=$(NFCAPD_IMAGE)' \
-		'  SAMBA_IMAGE=$(SAMBA_IMAGE)'
+		'  SAMBA_IMAGE=$(SAMBA_IMAGE)' \
+		'  NFCAPD_BASE_IMAGE=$(NFCAPD_BASE_IMAGE)' \
+		'  SAMBA_BASE_IMAGE=$(SAMBA_BASE_IMAGE)' \
+		'  CONTENT_KEY=$(CONTENT_KEY)'

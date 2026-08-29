@@ -121,10 +121,6 @@ Pushes to `main` and manual workflow dispatches will publish when the result
 differs from GHCR; pull requests will not publish. A daily scheduled run will
 poll for upstream changes.
 
-The workflow will have read-only repository access except for the publishing
-job, which also receives package write access. Concurrent runs for the same Git
-reference will cancel older in-progress runs.
-
 ### Change detection
 
 Change detection will be independent for each image and platform. A content key
@@ -134,6 +130,13 @@ will contain:
 - the resolved versions of packages installed from the distribution repository;
   and
 - a hash of the image's local build inputs.
+
+`ci/content-key.sh` resolves the platform manifest digest from the base image,
+resolves the package set against that digest's native distribution repository,
+and hashes the resulting package versions and local image context. The
+workflow passes the resolved digest as `BASE_IMAGE` and the resulting key as
+`CONTENT_KEY` when building, so the label describes the exact base selected for
+the build.
 
 Including package versions is required because Alpine and Ubuntu package
 repositories can change without a simultaneous base-image digest change. A
