@@ -2,8 +2,9 @@
 
 ## Status
 
-This is a design sketch. The containers and their publishing workflow are not
-implemented yet. The remaining work is tracked in [TODO.md](TODO.md).
+The repository tooling is implemented. The containers and their publishing
+workflow are still under construction; the remaining work is tracked in
+[TODO.md](TODO.md).
 
 ## Goals
 
@@ -22,6 +23,19 @@ will point to the same manifest as the corresponding versioned tag.
 Host-specific paths, pyinfra orchestration, and credentials from the examples
 are not part of the images. Each image will instead expose a stable container
 interface suitable for Podman, Docker, Compose, and other OCI runtimes.
+
+## Local development
+
+The root `Makefile` provides `build`, `test`, `lint`, and `help` targets. It
+uses Podman by default and builds both image contexts. The engine, image prefix,
+and individual image names can be overridden on the command line, for example:
+
+```console
+make ENGINE=docker IMAGE_PREFIX=registry.example/utility-containers build
+```
+
+The integration targets pass the selected engine and image name to each test
+script through `ENGINE` and `IMAGE` environment variables.
 
 ## nfcapd image
 

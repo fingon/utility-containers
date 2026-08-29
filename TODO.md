@@ -4,7 +4,7 @@ The behavior in [DESIGN.md](DESIGN.md) is planned but not yet implemented.
 
 ## Repository tooling
 
-- Add a Makefile with discoverable build, test, lint, and help targets. Use
+- [x] Add a Makefile with discoverable build, test, lint, and help targets. Use
   Podman by default and allow engine and image overrides.
 - Configure prek for Markdown, YAML, shell, Containerfile, and GitHub Actions
   checks, and enable the repository hooks.
