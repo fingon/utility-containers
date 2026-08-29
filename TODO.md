@@ -6,7 +6,7 @@ The behavior in [DESIGN.md](DESIGN.md) is planned but not yet implemented.
 
 - [x] Add a Makefile with discoverable build, test, lint, and help targets. Use
   Podman by default and allow engine and image overrides.
-- Configure prek for Markdown, YAML, shell, Containerfile, and GitHub Actions
+- [x] Configure prek for Markdown, YAML, shell, Containerfile, and GitHub Actions
   checks, and enable the repository hooks.
 - Add a brief README after the images are usable, including pull and run
   examples, volume permissions, Samba secret handling, and published tags.

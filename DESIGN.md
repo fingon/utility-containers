@@ -37,6 +37,10 @@ make ENGINE=docker IMAGE_PREFIX=registry.example/utility-containers build
 The integration targets pass the selected engine and image name to each test
 script through `ENGINE` and `IMAGE` environment variables.
 
+Install the repository hook with `prek install`. `make lint` runs the same
+checks against all tracked files, including Markdown, YAML, shell scripts,
+Containerfiles, and GitHub Actions workflows.
+
 ## nfcapd image
 
 The nfcapd image will track Alpine and install the distribution's `nfdump` and
