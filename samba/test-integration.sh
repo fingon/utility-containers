@@ -12,12 +12,53 @@ readonly file_server_name="utility-samba-test-file-$$"
 readonly file_client_name="utility-samba-test-file-client-$$"
 readonly env_server_name="utility-samba-test-env-$$"
 readonly env_client_name="utility-samba-test-env-client-$$"
+readonly diagnostic_dir="${ITEST_DIAG_DIR:-}"
+readonly file_password_value=file-password
+readonly environment_password_value=environment-password
 readonly wait_attempts=40
 readonly wait_interval_sec=0.25
 readonly stop_timeout_sec=5
 
 engine_command=("${engine_name}")
 temp_dir=""
+
+sanitize_log() {
+    local log="$1"
+    local secret
+    for secret in "${file_password_value}" "${environment_password_value}"; do
+        log="${log//"${secret}"/<redacted>}"
+    done
+    printf '%s' "${log}"
+}
+
+write_diagnostics() {
+    local name
+    local logs
+    local diagnostic_path
+    local diagnostics_available=false
+    if [[ -n "${diagnostic_dir}" ]]; then
+        if mkdir -p "${diagnostic_dir}"; then
+            diagnostics_available=true
+        else
+            printf 'failed to create diagnostics directory %s\n' \
+                "${diagnostic_dir}" >&2
+        fi
+    fi
+    for name in "${file_server_name}" "${env_server_name}"; do
+        diagnostic_path="${diagnostic_dir}/${name}.log"
+        if "${engine_command[@]}" inspect "${name}" >/dev/null 2>&1; then
+            logs="$("${engine_command[@]}" logs "${name}" 2>&1 || true)"
+            logs="$(sanitize_log "${logs}")"
+            printf '%s container logs:\n%s\n' "${name}" "${logs}" >&2
+            if [[ "${diagnostics_available}" == true ]]; then
+                printf '%s\n' "${logs}" >"${diagnostic_path}"
+            fi
+        elif [[ "${diagnostics_available}" == true ]]; then
+            printf '%s container was not available for diagnostics\n' \
+                "${name}" >"${diagnostic_path}"
+        fi
+    done
+}
 
 container_state() {
     "${engine_command[@]}" inspect --format '{{.State.Status}}' "$1" 2>/dev/null
@@ -35,12 +76,7 @@ cleanup() {
     trap - EXIT
 
     if ((exit_status != 0)); then
-        for name in "${file_server_name}" "${env_server_name}"; do
-            if "${engine_command[@]}" inspect "${name}" >/dev/null 2>&1; then
-                printf '%s container logs:\n' "${name}" >&2
-                "${engine_command[@]}" logs "${name}" >&2 || true
-            fi
-        done
+        write_diagnostics
     fi
 
     cleanup_container "${file_client_name}"
@@ -144,7 +180,7 @@ expect_failure() {
         unlink "${output_path}"
         return 1
     fi
-    if rg -q 'file-password|environment-password|rotated-password' \
+    if rg -q "${file_password_value}|${environment_password_value}" \
         "${output_path}"; then
         printf '%s exposed a credential\n' "${description}" >&2
         sed -n '1,40p' "${output_path}" >&2
@@ -170,14 +206,15 @@ fi
 temp_dir="$(mktemp -d "${workspace_dir}/.utility-samba-test.XXXXXX")"
 trap cleanup EXIT
 file_share_dir="${temp_dir}/file-share"
-file_password_path="${temp_dir}/file-password"
+file_password_path="${temp_dir}/${file_password_value}"
 file_credentials="${temp_dir}/file-credentials"
 mkdir "${file_share_dir}"
 chmod 0777 "${file_share_dir}"
 printf 'guest-visible\n' >"${file_share_dir}/guest-source.txt"
 chmod 0644 "${file_share_dir}/guest-source.txt"
-printf 'file-password\n' >"${file_password_path}"
-printf 'username = ubuntu\npassword = file-password\ndomain = WORKGROUP\n' \
+printf '%s\n' "${file_password_value}" >"${file_password_path}"
+printf 'username = ubuntu\npassword = %s\ndomain = WORKGROUP\n' \
+    "${file_password_value}" \
     >"${file_credentials}"
 chmod 0600 "${file_credentials}"
 
@@ -221,13 +258,13 @@ if [[ "${file_mode}" != 700 ]]; then
 fi
 
 file_server_logs="$("${engine_command[@]}" logs "${file_server_name}")"
-if [[ "${file_server_logs}" == *file-password* ]]; then
+if [[ "${file_server_logs}" == *"${file_password_value}"* ]]; then
     printf 'file password appeared in Samba logs\n' >&2
     exit 1
 fi
 image_history="$("${engine_command[@]}" history --no-trunc "${image_name}")"
-if [[ "${image_history}" == *file-password* ||
-    "${image_history}" == *environment-password* ]]; then
+if [[ "${image_history}" == *"${file_password_value}"* ||
+    "${image_history}" == *"${environment_password_value}"* ]]; then
     printf 'a password appeared in image history\n' >&2
     exit 1
 fi
@@ -243,13 +280,14 @@ env_share_dir="${temp_dir}/env-share"
 env_credentials="${temp_dir}/env-credentials"
 mkdir "${env_share_dir}"
 chmod 0777 "${env_share_dir}"
-printf 'username = ubuntu\npassword = environment-password\ndomain = WORKGROUP\n' \
+printf 'username = ubuntu\npassword = %s\ndomain = WORKGROUP\n' \
+    "${environment_password_value}" \
     >"${env_credentials}"
 chmod 0600 "${env_credentials}"
 "${engine_command[@]}" run --detach \
     --name "${env_server_name}" \
     --volume "${env_share_dir}:/share" \
-    --env SAMBA_PASSWORD=environment-password \
+    --env "SAMBA_PASSWORD=${environment_password_value}" \
     "${image_name}" >/dev/null
 wait_for_running "${env_server_name}"
 start_client "${env_client_name}" "${env_server_name}" "${env_credentials}"
@@ -271,18 +309,18 @@ empty_file="${temp_dir}/empty-password"
 : >"${empty_file}"
 expect_failure invalid_user "${engine_command[@]}" run --rm \
     --env SAMBA_USER=bad/name \
-    --env SAMBA_PASSWORD=file-password \
+    --env "SAMBA_PASSWORD=${file_password_value}" \
     "${image_name}"
 expect_failure invalid_uid "${engine_command[@]}" run --rm \
     --env SAMBA_UID=not-a-number \
-    --env SAMBA_PASSWORD=file-password \
+    --env "SAMBA_PASSWORD=${file_password_value}" \
     "${image_name}"
 expect_failure missing_password_file "${engine_command[@]}" run --rm \
-    --env SAMBA_PASSWORD=environment-password \
+    --env "SAMBA_PASSWORD=${environment_password_value}" \
     --env SAMBA_PASSWORD_FILE=/run/secrets/missing \
     "${image_name}"
 expect_failure empty_password_file "${engine_command[@]}" run --rm \
-    --env SAMBA_PASSWORD=environment-password \
+    --env "SAMBA_PASSWORD=${environment_password_value}" \
     --env SAMBA_PASSWORD_FILE=/run/secrets/password \
     --volume "${empty_file}:/run/secrets/password:ro" \
     "${image_name}"

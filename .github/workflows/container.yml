@@ -91,6 +91,7 @@ jobs:
         env:
           ENGINE: podman
           IMAGE: localhost/utility-containers/nfcapd:alpine
+          ITEST_DIAG_DIR: ${{ runner.temp }}/integration-diagnostics
         run: ./nfcapd/test-integration.sh
 
       - name: Load or build Samba image
@@ -110,7 +111,17 @@ jobs:
         env:
           ENGINE: podman
           IMAGE: localhost/utility-containers/samba:24.04
+          ITEST_DIAG_DIR: ${{ runner.temp }}/integration-diagnostics
         run: ./samba/test-integration.sh
+
+      - name: Upload integration diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: integration-diagnostics-${{ matrix.architecture }}
+          path: ${{ runner.temp }}/integration-diagnostics
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Record tested image metadata
         env:

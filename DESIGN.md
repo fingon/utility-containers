@@ -2,9 +2,8 @@
 
 ## Status
 
-The repository tooling is implemented. The containers and their publishing
-workflow are still under construction; the remaining work is tracked in
-[TODO.md](TODO.md).
+The repository tooling, container images, and publishing workflow are
+implemented. [TODO.md](TODO.md) records the completed implementation backlog.
 
 ## Goals
 
@@ -191,5 +190,6 @@ The Samba integration tests:
 8. stop the container and remove all temporary resources.
 
 Publishing is gated on linting, per-platform builds, and these integration
-tests. Failures will retain concise container diagnostics as workflow artifacts
-without including credential values.
+tests. On failure, the integration scripts sanitize container logs into
+`ITEST_DIAG_DIR`, and the matrix job uploads those concise diagnostics as a
+short-lived workflow artifact without including credential values.

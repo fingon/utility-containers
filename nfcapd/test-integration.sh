@@ -9,6 +9,7 @@ workspace_dir="$(cd -- "${script_dir}/.." && pwd)"
 readonly workspace_dir
 readonly fixture_path="${FIXTURE:-${script_dir}/testdata/netflow-v5.hex}"
 readonly container_name="utility-nfcapd-test-$$"
+readonly diagnostic_dir="${ITEST_DIAG_DIR:-}"
 readonly netflow_port=9995
 readonly container_udp_port="${netflow_port}/udp"
 readonly flow_mount_path=/flows
@@ -20,6 +21,30 @@ engine_command=("${engine_name}")
 temp_dir=""
 flow_dir=""
 packet_path=""
+
+write_diagnostics() {
+    local diagnostic_path=""
+    if [[ -z "${diagnostic_dir}" ]]; then
+        return
+    fi
+    if ! mkdir -p "${diagnostic_dir}"; then
+        printf 'failed to create diagnostics directory %s\n' \
+            "${diagnostic_dir}" >&2
+        return
+    fi
+    diagnostic_path="${diagnostic_dir}/nfcapd.log"
+    if "${engine_command[@]}" inspect "${container_name}" \
+        >/dev/null 2>&1; then
+        if ! "${engine_command[@]}" logs "${container_name}" \
+            >"${diagnostic_path}" 2>&1; then
+            printf 'failed to capture nfcapd logs for %s\n' \
+                "${container_name}" >&2
+        fi
+    else
+        printf 'nfcapd container was not available for diagnostics\n' \
+            >"${diagnostic_path}"
+    fi
+}
 
 container_state() {
     "${engine_command[@]}" inspect --format '{{.State.Status}}' \
@@ -34,10 +59,13 @@ cleanup() {
     local exit_status=$?
     trap - EXIT
 
-    if ((exit_status != 0)) && "${engine_command[@]}" inspect \
-        "${container_name}" >/dev/null 2>&1; then
-        printf 'nfcapd container logs:\n' >&2
-        "${engine_command[@]}" logs "${container_name}" >&2 || true
+    if ((exit_status != 0)); then
+        write_diagnostics
+        if "${engine_command[@]}" inspect "${container_name}" \
+            >/dev/null 2>&1; then
+            printf 'nfcapd container logs:\n' >&2
+            "${engine_command[@]}" logs "${container_name}" >&2 || true
+        fi
     fi
 
     if "${engine_command[@]}" inspect "${container_name}" \

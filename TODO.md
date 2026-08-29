@@ -1,6 +1,6 @@
 # Implementation backlog
 
-The behavior in [DESIGN.md](DESIGN.md) is planned but not yet implemented.
+The behavior in [DESIGN.md](DESIGN.md) is implemented.
 
 ## Repository tooling
 
@@ -38,4 +38,4 @@ The behavior in [DESIGN.md](DESIGN.md) is planned but not yet implemented.
   staging tags and atomically update the multi-platform public tags.
 - [x] Distinguish an absent GHCR image from registry failures when checking whether
   publication is required.
-- Upload sanitized diagnostics when an integration test fails.
+- [x] Upload sanitized diagnostics when an integration test fails.
