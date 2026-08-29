@@ -1,7 +1,11 @@
-ARG BASE_IMAGE=alpine:latest
+ARG BASE_IMAGE=debian:stable-slim
 FROM ${BASE_IMAGE}
 
-RUN apk add --no-cache nfdump shadow
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends nfdump \
+    && rm -rf /var/lib/apt/lists/*
 
 VOLUME /flows
 
