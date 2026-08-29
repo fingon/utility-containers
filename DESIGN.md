@@ -151,15 +151,15 @@ registry inspection failures are errors.
 
 Built images are cached as OCI archives by content key. A cache hit skips only
 the build: the workflow still loads and integration-tests every candidate
-image. The workflow will use native `ubuntu-24.04` amd64 and
+image. The workflow uses native `ubuntu-24.04` amd64 and
 `ubuntu-24.04-arm` arm64 GitHub-hosted runners rather than emulation.
 
 ### Atomic multi-platform publication
 
-Each architecture will be built and tested independently. After both tests
-succeed, the publishing job will push run-specific staging tags and assemble a
-multi-platform manifest. Only then will it update the distribution tag and
-`latest`. A failed or incomplete platform build must not replace a public
+Each architecture is built and tested independently. After both tests succeed,
+the publishing job pushes run-specific staging tags and assembles a
+multi-platform manifest. Only then does it update the distribution tag and
+`latest`. A failed or incomplete platform build cannot replace a public
 manifest.
 
 The workflow will skip all pushes when both published platform content keys

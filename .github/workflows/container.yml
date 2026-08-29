@@ -22,9 +22,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  checks:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
+  build-and-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: amd64
+            runner: ubuntu-24.04
+          - architecture: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -43,56 +51,112 @@ jobs:
       - name: Resolve nfcapd content key
         id: nfcapd-meta
         env:
-          TARGET_ARCH: amd64
+          TARGET_ARCH: ${{ matrix.architecture }}
         run: ./ci/content-key.sh nfcapd "${TARGET_ARCH}" >> "$GITHUB_OUTPUT"
 
       - name: Resolve Samba content key
         id: samba-meta
         env:
-          TARGET_ARCH: amd64
+          TARGET_ARCH: ${{ matrix.architecture }}
         run: ./ci/content-key.sh samba "${TARGET_ARCH}" >> "$GITHUB_OUTPUT"
 
       - name: Cache nfcapd image
         id: nfcapd-cache
         uses: actions/cache@v6
         with:
-          path: ${{ runner.temp }}/utility-nfcapd.tar
-          key: utility-nfcapd-${{ steps.nfcapd-meta.outputs.key }}
+          path: ${{ runner.temp }}/utility-nfcapd-${{ matrix.architecture }}.tar
+          key: utility-nfcapd-${{ matrix.architecture }}-${{ steps.nfcapd-meta.outputs.key }}
 
       - name: Cache Samba image
         id: samba-cache
         uses: actions/cache@v6
         with:
-          path: ${{ runner.temp }}/utility-samba.tar
-          key: utility-samba-${{ steps.samba-meta.outputs.key }}
+          path: ${{ runner.temp }}/utility-samba-${{ matrix.architecture }}.tar
+          key: utility-samba-${{ matrix.architecture }}-${{ steps.samba-meta.outputs.key }}
 
-      - name: Build uncached images
+      - name: Load or build nfcapd image
         env:
           NFCAPD_BASE_IMAGE: ${{ steps.nfcapd-meta.outputs.base_image }}
           NFCAPD_CONTENT_KEY: ${{ steps.nfcapd-meta.outputs.key }}
+        run: |
+          if [[ "${{ steps.nfcapd-cache.outputs.cache-hit }}" == true ]]; then
+            podman load --input "$RUNNER_TEMP/utility-nfcapd-${{ matrix.architecture }}.tar"
+          else
+            make build-nfcapd
+            podman save --output "$RUNNER_TEMP/utility-nfcapd-${{ matrix.architecture }}.tar" \
+              localhost/utility-containers/nfcapd:alpine
+          fi
+
+      - name: Test nfcapd image
+        env:
+          ENGINE: podman
+          IMAGE: localhost/utility-containers/nfcapd:alpine
+        run: ./nfcapd/test-integration.sh
+
+      - name: Load or build Samba image
+        env:
           SAMBA_BASE_IMAGE: ${{ steps.samba-meta.outputs.base_image }}
           SAMBA_CONTENT_KEY: ${{ steps.samba-meta.outputs.key }}
         run: |
-          if [[ "${{ steps.nfcapd-cache.outputs.cache-hit }}" == true ]]; then
-            podman load --input "$RUNNER_TEMP/utility-nfcapd.tar"
-          else
-            make build-nfcapd
-            podman save --output "$RUNNER_TEMP/utility-nfcapd.tar" \
-              localhost/utility-containers/nfcapd:alpine
-          fi
           if [[ "${{ steps.samba-cache.outputs.cache-hit }}" == true ]]; then
-            podman load --input "$RUNNER_TEMP/utility-samba.tar"
+            podman load --input "$RUNNER_TEMP/utility-samba-${{ matrix.architecture }}.tar"
           else
             make build-samba
-            podman save --output "$RUNNER_TEMP/utility-samba.tar" \
+            podman save --output "$RUNNER_TEMP/utility-samba-${{ matrix.architecture }}.tar" \
               localhost/utility-containers/samba:24.04
           fi
 
-      - name: Test every candidate image
+      - name: Test Samba image
         env:
           ENGINE: podman
-          NFCAPD_IMAGE: localhost/utility-containers/nfcapd:alpine
-          SAMBA_IMAGE: localhost/utility-containers/samba:24.04
+          IMAGE: localhost/utility-containers/samba:24.04
+        run: ./samba/test-integration.sh
+
+      - name: Upload tested images for publication
+        if: github.event_name != 'pull_request' && (github.event_name != 'workflow_dispatch' || inputs.publish == true)
+        uses: actions/upload-artifact@v7
+        with:
+          name: tested-images-${{ matrix.architecture }}
+          path: |
+            ${{ runner.temp }}/utility-nfcapd-${{ matrix.architecture }}.tar
+            ${{ runner.temp }}/utility-samba-${{ matrix.architecture }}.tar
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    if: github.event_name != 'pull_request' && (github.event_name != 'workflow_dispatch' || inputs.publish == true)
+    needs: build-and-test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Podman
         run: |
-          IMAGE="$NFCAPD_IMAGE" ./nfcapd/test-integration.sh
-          IMAGE="$SAMBA_IMAGE" ./samba/test-integration.sh
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends podman
+
+      - name: Download tested images
+        uses: actions/download-artifact@v7
+        with:
+          pattern: tested-images-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/tested-images
+
+      - name: Log in to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io \
+            --username "${{ github.actor }}" --password-stdin
+
+      - name: Push staging images and public manifests
+        env:
+          ARTIFACT_DIR: ${{ runner.temp }}/tested-images
+          ENGINE: podman
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          REGISTRY: ghcr.io
+          RUN_TAG: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: ./ci/publish-images.sh
