@@ -159,7 +159,7 @@ already match. GHCR authentication will use the workflow's short-lived
 Local Make targets and CI will use Podman by default while allowing the engine
 and image names to be overridden.
 
-The nfcapd integration test will:
+The nfcapd integration test:
 
 1. build the image and start it rootlessly with a temporary flow directory;
 2. send a known NetFlow fixture to the published UDP port;
