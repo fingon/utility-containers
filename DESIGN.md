@@ -93,16 +93,15 @@ groups:
 | `SAMBA_PASSWORD` | unset | Password fallback when no file is configured |
 
 `SAMBA_PASSWORD_FILE` takes precedence over `SAMBA_PASSWORD`. The entrypoint
-will fail before starting `smbd` if the configured file cannot be read, the
-password is empty, either numeric ID is invalid, or the requested account
-conflicts with an unrelated existing account. It will update the Samba password
-on every start so credential rotation only requires recreating or restarting
-the container.
+fails before starting `smbd` if the configured file cannot be read, the password
+is empty, either numeric ID is invalid, or the requested account conflicts with
+an unrelated existing account. It updates the Samba password on every start so
+credential rotation only requires recreating or restarting the container.
 
-The password will be passed directly to `smbpasswd` without being written to an
-image layer or printed to logs. A runtime secret file is the recommended input;
-the environment variable exists for simple deployments but may be visible in
-container metadata.
+The password is passed to `smbpasswd` through standard input without being
+written to an image layer or printed to logs. A runtime secret file is the
+recommended input; the environment variable exists for simple deployments but
+may be visible in container metadata.
 
 The mounted `/share` must be accessible to the configured UID and GID. The
 entrypoint will not recursively change ownership of existing data.

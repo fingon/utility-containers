@@ -9,6 +9,8 @@ readonly max_numeric_id=2147483647
 samba_user="${SAMBA_USER-${default_user}}"
 samba_uid_input="${SAMBA_UID-${default_uid}}"
 samba_gid_input="${SAMBA_GID-${default_gid}}"
+samba_password_file="${SAMBA_PASSWORD_FILE-}"
+samba_password=""
 
 fail() {
     printf 'error: %s\n' "$*" >&2
@@ -105,10 +107,45 @@ ensure_user() {
     fi
 }
 
+read_password() {
+    if [[ -n "${samba_password_file}" ]]; then
+        if [[ ! -f "${samba_password_file}" ||
+            ! -r "${samba_password_file}" ]]; then
+            fail "SAMBA_PASSWORD_FILE must name a readable regular file"
+        fi
+        if ! samba_password="$(<"${samba_password_file}")"; then
+            fail "SAMBA_PASSWORD_FILE could not be read"
+        fi
+        if [[ "${samba_password}" == *$'\n'* ||
+            "${samba_password}" == *$'\r'* ]]; then
+            fail "SAMBA_PASSWORD_FILE must contain one password line"
+        fi
+    else
+        samba_password="${SAMBA_PASSWORD-}"
+    fi
+
+    if [[ -z "${samba_password}" ]]; then
+        fail "a non-empty password is required in SAMBA_PASSWORD_FILE or SAMBA_PASSWORD"
+    fi
+}
+
+update_samba_password() {
+    local smbpasswd_args=(-s "${samba_user}")
+    if ! /usr/bin/pdbedit -L -u "${samba_user}" >/dev/null 2>&1; then
+        smbpasswd_args=(-a -s "${samba_user}")
+    fi
+    if ! printf '%s\n%s\n' "${samba_password}" "${samba_password}" |
+        /usr/bin/smbpasswd "${smbpasswd_args[@]}" >/dev/null; then
+        fail "could not update the Samba password for ${samba_user}"
+    fi
+}
+
 validate_user
 samba_uid="$(validate_id SAMBA_UID "${samba_uid_input}")"
 samba_gid="$(validate_id SAMBA_GID "${samba_gid_input}")"
 ensure_group
 ensure_user
+read_password
+update_samba_password
 
 exec /usr/sbin/smbd --no-process-group --foreground --debug-stdout

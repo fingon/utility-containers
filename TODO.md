@@ -23,7 +23,7 @@ The behavior in [DESIGN.md](DESIGN.md) is planned but not yet implemented.
 - [x] Add the Ubuntu 24.04 image, Samba configuration, and startup entrypoint.
 - [x] Implement validated runtime account creation for `SAMBA_USER`, `SAMBA_UID`,
   and `SAMBA_GID`, including explicit conflict errors.
-- Implement password-file precedence, environment fallback, password rotation,
+- [x] Implement password-file precedence, environment fallback, password rotation,
   and fail-fast handling without exposing credentials.
 - Add authenticated, guest, ownership, validation, shutdown, and secret-leak
   integration tests.
