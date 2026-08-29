@@ -149,9 +149,10 @@ workflow will compare the desired keys with every platform image in the current
 GHCR manifest. A confirmed missing image means publication is needed; other
 registry inspection failures are errors.
 
-Built images will be cached by content key. A cache hit may skip the build, but
-never the integration test. The workflow will use native `ubuntu-24.04` amd64
-and `ubuntu-24.04-arm` arm64 GitHub-hosted runners rather than emulation.
+Built images are cached as OCI archives by content key. A cache hit skips only
+the build: the workflow still loads and integration-tests every candidate
+image. The workflow will use native `ubuntu-24.04` amd64 and
+`ubuntu-24.04-arm` arm64 GitHub-hosted runners rather than emulation.
 
 ### Atomic multi-platform publication
 

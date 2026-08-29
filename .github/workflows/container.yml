@@ -52,10 +52,47 @@ jobs:
           TARGET_ARCH: amd64
         run: ./ci/content-key.sh samba "${TARGET_ARCH}" >> "$GITHUB_OUTPUT"
 
-      - name: Build and test
+      - name: Cache nfcapd image
+        id: nfcapd-cache
+        uses: actions/cache@v6
+        with:
+          path: ${{ runner.temp }}/utility-nfcapd.tar
+          key: utility-nfcapd-${{ steps.nfcapd-meta.outputs.key }}
+
+      - name: Cache Samba image
+        id: samba-cache
+        uses: actions/cache@v6
+        with:
+          path: ${{ runner.temp }}/utility-samba.tar
+          key: utility-samba-${{ steps.samba-meta.outputs.key }}
+
+      - name: Build uncached images
         env:
           NFCAPD_BASE_IMAGE: ${{ steps.nfcapd-meta.outputs.base_image }}
           NFCAPD_CONTENT_KEY: ${{ steps.nfcapd-meta.outputs.key }}
           SAMBA_BASE_IMAGE: ${{ steps.samba-meta.outputs.base_image }}
           SAMBA_CONTENT_KEY: ${{ steps.samba-meta.outputs.key }}
-        run: make test
+        run: |
+          if [[ "${{ steps.nfcapd-cache.outputs.cache-hit }}" == true ]]; then
+            podman load --input "$RUNNER_TEMP/utility-nfcapd.tar"
+          else
+            make build-nfcapd
+            podman save --output "$RUNNER_TEMP/utility-nfcapd.tar" \
+              localhost/utility-containers/nfcapd:alpine
+          fi
+          if [[ "${{ steps.samba-cache.outputs.cache-hit }}" == true ]]; then
+            podman load --input "$RUNNER_TEMP/utility-samba.tar"
+          else
+            make build-samba
+            podman save --output "$RUNNER_TEMP/utility-samba.tar" \
+              localhost/utility-containers/samba:24.04
+          fi
+
+      - name: Test every candidate image
+        env:
+          ENGINE: podman
+          NFCAPD_IMAGE: localhost/utility-containers/nfcapd:alpine
+          SAMBA_IMAGE: localhost/utility-containers/samba:24.04
+        run: |
+          IMAGE="$NFCAPD_IMAGE" ./nfcapd/test-integration.sh
+          IMAGE="$SAMBA_IMAGE" ./samba/test-integration.sh
