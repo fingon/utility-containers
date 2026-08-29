@@ -2,10 +2,9 @@
 
 ## Status
 
-The repository tooling, container images, publishing workflow, and migration to
-Debian's stable channel are implemented. The workflow publishes the Debian
-images after a successful native build-and-test matrix. [TODO.md](TODO.md)
-records the implementation backlog.
+The repository tooling, Debian stable container images, and publishing workflow
+are implemented. The workflow publishes the images after a successful native
+build-and-test matrix. There are no outstanding implementation items.
 
 ## Goals
 
@@ -67,8 +66,7 @@ retaining the `nfcapd` entrypoint.
 
 The Samba image will track Debian stable and install Samba from the distribution
 repository. It exposes TCP ports 445 and 139 and uses `/share` for persistent
-data. The base-image migration will not change its runtime interface or default
-account.
+data while retaining the established runtime interface and default account.
 
 The image's Samba configuration preserves the example's behavior:
 
