@@ -69,7 +69,7 @@ The image's Samba configuration preserves the example's behavior:
 - SMB2 as the minimum protocol;
 - one browseable, writable share named `share` backed by `/share`;
 - guest access and `Bad User` guest mapping;
-- file and directory creation masks of `0700`; and
+- file and directory creation masks of `0700`;
 - `smbd` in foreground mode with debug output written to standard output; and
 - `org.opencontainers.image.content-key` stores the build content key.
 
@@ -79,8 +79,10 @@ require a rootful runtime or host-specific unprivileged-port configuration.
 
 ### Runtime account and credentials
 
-The entrypoint will ensure that the Unix account used by Samba matches these
-settings:
+The entrypoint ensures that the Unix account used by Samba matches these
+settings. It creates the requested group and account when their IDs are
+unclaimed, and reports an explicit conflict for existing unrelated users or
+groups:
 
 | Setting | Default | Meaning |
 | --- | --- | --- |
