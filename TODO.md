@@ -25,7 +25,7 @@ The behavior in [DESIGN.md](DESIGN.md) is planned but not yet implemented.
   and `SAMBA_GID`, including explicit conflict errors.
 - [x] Implement password-file precedence, environment fallback, password rotation,
   and fail-fast handling without exposing credentials.
-- Add authenticated, guest, ownership, validation, shutdown, and secret-leak
+- [x] Add authenticated, guest, ownership, validation, shutdown, and secret-leak
   integration tests.
 
 ## Publishing

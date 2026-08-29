@@ -168,7 +168,7 @@ The nfcapd integration test:
 3. verify that `nfcapd` remains healthy and writes flow data below `/flows`; and
 4. stop the container and remove all temporary resources.
 
-The Samba integration tests will:
+The Samba integration tests:
 
 1. start the image with a temporary share and a password secret file;
 2. authenticate with `smbclient`, then write and read a file;
