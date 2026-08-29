@@ -1,0 +1,13 @@
+FROM alpine:latest
+
+RUN apk add --no-cache nfdump shadow
+
+VOLUME /flows
+
+EXPOSE 9995/udp
+
+ARG CONTENT_KEY=""
+LABEL org.opencontainers.image.content-key="${CONTENT_KEY}"
+
+ENTRYPOINT ["nfcapd"]
+CMD ["-S", "2", "-w", "/flows/", "-p", "9995"]

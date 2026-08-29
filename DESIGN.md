@@ -43,13 +43,14 @@ Containerfiles, and GitHub Actions workflows.
 
 ## nfcapd image
 
-The nfcapd image will track Alpine and install the distribution's `nfdump` and
-`shadow` packages. It will preserve the behavior of `example/nfcapd.py`:
+The nfcapd image tracks Alpine and installs the distribution's `nfdump` and
+`shadow` packages. It preserves the behavior of `example/nfcapd.py`:
 
 - `nfcapd` is the entrypoint;
 - the default arguments are `-S 2 -w /flows/ -p 9995`;
 - `/flows` contains persistent flow data; and
-- port `9995/udp` receives NetFlow traffic.
+- port `9995/udp` receives NetFlow traffic; and
+- `org.opencontainers.image.content-key` stores the build content key.
 
 The image will be usable by a rootless container runtime. The caller is
 responsible for creating a writable flow directory and mounting it at

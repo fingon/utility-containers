@@ -13,7 +13,7 @@ The behavior in [DESIGN.md](DESIGN.md) is planned but not yet implemented.
 
 ## nfcapd
 
-- Add the Alpine-based image with the entrypoint, defaults, volume, UDP port,
+- [x] Add the Alpine-based image with the entrypoint, defaults, volume, UDP port,
   and OCI content-key label described in the design.
 - Add a small NetFlow fixture and a rootless integration test that verifies
   persistent output and cleanup.
