@@ -110,10 +110,16 @@ entrypoint will not recursively change ownership of existing data.
 
 ### Triggers
 
-Pull requests will build and test both images without publishing. Pushes to
-`main` and manual workflow dispatches will build, test, and publish when the
-result differs from GHCR. A daily scheduled run will poll for upstream changes.
-Manual dispatch will include an option to disable publication.
+The container workflow builds and tests both images for pull requests, pushes
+to `main`, and a daily scheduled run. Manual workflow dispatch includes a
+`publish` option for the later publication stage.
+
+The workflow's default repository permission is read-only. Concurrent runs for
+the same Git reference cancel older in-progress runs.
+
+Pushes to `main` and manual workflow dispatches will publish when the result
+differs from GHCR; pull requests will not publish. A daily scheduled run will
+poll for upstream changes.
 
 The workflow will have read-only repository access except for the publishing
 job, which also receives package write access. Concurrent runs for the same Git

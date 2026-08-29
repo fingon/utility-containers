@@ -30,7 +30,7 @@ The behavior in [DESIGN.md](DESIGN.md) is planned but not yet implemented.
 
 ## Publishing
 
-- Add pull-request, main-branch, daily, and manual GitHub Actions triggers.
+- [x] Add pull-request, main-branch, daily, and manual GitHub Actions triggers.
 - Resolve per-platform base digests and package versions, hash local inputs, and
   store the resulting content key as OCI metadata.
 - Cache images by content key while still testing every candidate image.
