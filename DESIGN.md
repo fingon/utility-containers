@@ -3,7 +3,9 @@
 ## Status
 
 The repository tooling, container images, and publishing workflow are
-implemented. [TODO.md](TODO.md) records the completed implementation backlog.
+implemented. The migration from the current Alpine and Ubuntu bases to Debian's
+stable channel is designed but not implemented. [TODO.md](TODO.md) records the
+remaining migration work.
 
 ## Goals
 
@@ -13,11 +15,16 @@ GHCR for Linux on both amd64 and arm64:
 
 | Container | Image | Tags |
 | --- | --- | --- |
-| nfcapd | `ghcr.io/fingon/utility-containers/nfcapd` | `alpine`, `latest` |
-| Samba | `ghcr.io/fingon/utility-containers/samba` | `24.04`, `latest` |
+| nfcapd | `ghcr.io/fingon/utility-containers/nfcapd` | `debian`, `latest` |
+| Samba | `ghcr.io/fingon/utility-containers/samba` | `debian`, `latest` |
 
-The versioned tag names identify the tracked distribution release. `latest`
-will point to the same manifest as the corresponding versioned tag.
+The `debian` tag identifies the tracked distribution family. `latest` will
+point to the same manifest.
+
+Both images will use `debian:stable-slim`. This floating upstream tag follows
+the current Debian stable release without adopting Debian testing or unstable.
+The existing `nfcapd:alpine` and `samba:24.04` tags will not be repointed to
+Debian images and will stop receiving updates when the new tags are published.
 
 Host-specific paths, pyinfra orchestration, and credentials from the examples
 are not part of the images. Each image will instead expose a stable container
@@ -42,8 +49,8 @@ Containerfiles, and GitHub Actions workflows.
 
 ## nfcapd image
 
-The nfcapd image tracks Alpine and installs the distribution's `nfdump` and
-`shadow` packages. It preserves the behavior of `example/nfcapd.py`:
+The nfcapd image will track Debian stable and install the distribution's
+`nfdump` package. It preserves the behavior of `example/nfcapd.py`:
 
 - `nfcapd` is the entrypoint;
 - the default arguments are `-S 2 -w /flows/ -p 9995`;
@@ -58,9 +65,10 @@ retaining the `nfcapd` entrypoint.
 
 ## Samba image
 
-The Samba image tracks Ubuntu 24.04 and installs Samba from the distribution
+The Samba image will track Debian stable and install Samba from the distribution
 repository. It exposes TCP ports 445 and 139 and uses `/share` for persistent
-data.
+data. The base-image migration will not change its runtime interface or default
+account.
 
 The image's Samba configuration preserves the example's behavior:
 
@@ -137,17 +145,18 @@ workflow passes the resolved digest as `BASE_IMAGE` and the resulting key as
 `CONTENT_KEY` when building, so the label describes the exact base selected for
 the build.
 
-Including package versions is required because Alpine and Ubuntu package
-repositories can change without a simultaneous base-image digest change. A
-failure to resolve an input will fail the workflow rather than treating the
-image as unchanged.
+Including package versions is required because Debian's package repository can
+change without a simultaneous base-image digest change. A failure to resolve an
+input will fail the workflow rather than treating the image as unchanged. When
+`debian:stable-slim` advances to a new stable release, its resolved digest and
+package versions will produce new content keys and require fully tested images.
 
 Each platform image will carry its content key in the
 `org.opencontainers.image.content-key` OCI label. Before publishing, the
 workflow compares the desired keys with every platform image in both current
-GHCR public tags. `ci/check-publication.sh` treats a confirmed missing image or
-an incomplete/mismatched manifest as publication-needed; other registry
-inspection failures are errors.
+GHCR public tags, `debian` and `latest`. `ci/check-publication.sh` treats a
+confirmed missing image or an incomplete/mismatched manifest as
+publication-needed; other registry inspection failures are errors.
 
 Built images are cached as OCI archives by content key. A cache hit skips only
 the build: the workflow still loads and integration-tests every candidate

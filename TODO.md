@@ -1,6 +1,20 @@
 # Implementation backlog
 
-The behavior in [DESIGN.md](DESIGN.md) is implemented.
+The original behavior is implemented. The Debian stable migration described in
+[DESIGN.md](DESIGN.md) remains to be implemented.
+
+## Debian stable migration
+
+- [ ] Move both images to `debian:stable-slim`, install their packages with APT,
+  and preserve the existing runtime interfaces and Samba account defaults.
+- [ ] Update local builds, integration-test clients, content-key resolution, and
+  CI image references from the Alpine and Ubuntu bases to Debian stable.
+- [ ] Publish both images as `debian` and `latest`; stop updating
+  `nfcapd:alpine` and `samba:24.04` without repointing those legacy tags.
+- [ ] Build and integration-test the Debian images on native amd64 and arm64,
+  including content-key changes across upstream base and package updates.
+- [ ] Update README usage examples and published-tag documentation after the
+  migrated images are implemented and verified.
 
 ## Repository tooling
 
