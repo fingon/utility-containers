@@ -145,9 +145,10 @@ image as unchanged.
 
 Each platform image will carry its content key in the
 `org.opencontainers.image.content-key` OCI label. Before publishing, the
-workflow will compare the desired keys with every platform image in the current
-GHCR manifest. A confirmed missing image means publication is needed; other
-registry inspection failures are errors.
+workflow compares the desired keys with every platform image in both current
+GHCR public tags. `ci/check-publication.sh` treats a confirmed missing image or
+an incomplete/mismatched manifest as publication-needed; other registry
+inspection failures are errors.
 
 Built images are cached as OCI archives by content key. A cache hit skips only
 the build: the workflow still loads and integration-tests every candidate

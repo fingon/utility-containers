@@ -112,6 +112,14 @@ jobs:
           IMAGE: localhost/utility-containers/samba:24.04
         run: ./samba/test-integration.sh
 
+      - name: Record tested image metadata
+        env:
+          NFCAPD_CONTENT_KEY: ${{ steps.nfcapd-meta.outputs.key }}
+          SAMBA_CONTENT_KEY: ${{ steps.samba-meta.outputs.key }}
+        run: |
+          printf 'nfcapd=%s\nsamba=%s\n' "$NFCAPD_CONTENT_KEY" "$SAMBA_CONTENT_KEY" \
+            > "$RUNNER_TEMP/metadata-${{ matrix.architecture }}"
+
       - name: Upload tested images for publication
         if: github.event_name != 'pull_request' && (github.event_name != 'workflow_dispatch' || inputs.publish == true)
         uses: actions/upload-artifact@v7
@@ -120,6 +128,7 @@ jobs:
           path: |
             ${{ runner.temp }}/utility-nfcapd-${{ matrix.architecture }}.tar
             ${{ runner.temp }}/utility-samba-${{ matrix.architecture }}.tar
+            ${{ runner.temp }}/metadata-${{ matrix.architecture }}
           if-no-files-found: error
           retention-days: 1
 
@@ -138,7 +147,7 @@ jobs:
       - name: Install Podman
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends podman
+          sudo apt-get install -y --no-install-recommends jq podman skopeo
 
       - name: Download tested images
         uses: actions/download-artifact@v7
@@ -148,15 +157,28 @@ jobs:
           path: ${{ runner.temp }}/tested-images
 
       - name: Log in to GHCR
+        env:
+          REGISTRY_AUTH_FILE: ${{ runner.temp }}/registry-auth.json
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io \
             --username "${{ github.actor }}" --password-stdin
 
+      - name: Check whether publication is required
+        id: publication
+        env:
+          ARTIFACT_DIR: ${{ runner.temp }}/tested-images
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          REGISTRY: ghcr.io
+          REGISTRY_AUTH_FILE: ${{ runner.temp }}/registry-auth.json
+        run: ./ci/check-publication.sh >> "$GITHUB_OUTPUT"
+
       - name: Push staging images and public manifests
+        if: steps.publication.outputs.needed == 'true'
         env:
           ARTIFACT_DIR: ${{ runner.temp }}/tested-images
           ENGINE: podman
           GITHUB_REPOSITORY: ${{ github.repository }}
           REGISTRY: ghcr.io
+          REGISTRY_AUTH_FILE: ${{ runner.temp }}/registry-auth.json
           RUN_TAG: ${{ github.run_id }}-${{ github.run_attempt }}
         run: ./ci/publish-images.sh

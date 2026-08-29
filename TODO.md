@@ -36,6 +36,6 @@ The behavior in [DESIGN.md](DESIGN.md) is planned but not yet implemented.
 - [x] Cache images by content key while still testing every candidate image.
 - [x] Build and test on native amd64 and arm64 runners, then publish run-specific
   staging tags and atomically update the multi-platform public tags.
-- Distinguish an absent GHCR image from registry failures when checking whether
+- [x] Distinguish an absent GHCR image from registry failures when checking whether
   publication is required.
 - Upload sanitized diagnostics when an integration test fails.
