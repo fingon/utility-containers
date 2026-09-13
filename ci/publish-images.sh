@@ -57,7 +57,7 @@ push_manifests() {
     "${engine_command[@]}" manifest create "${name}"
     for platform in "${platforms[@]}"; do
         "${engine_command[@]}" manifest add "${name}" \
-            "localhost/utility-${source}:${platform}"
+            "containers-storage:localhost/utility-${source}:${platform}"
     done
     for tag in "${versioned_tag}" latest; do
         "${engine_command[@]}" manifest push --all "${name}" \

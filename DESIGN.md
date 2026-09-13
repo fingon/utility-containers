@@ -165,7 +165,8 @@ image. The workflow uses native `ubuntu-24.04` amd64 and
 
 Each architecture is built and tested independently. After both tests succeed,
 the publishing job pushes run-specific staging tags and assembles a
-multi-platform manifest. Only then does it update the distribution tag and
+multi-platform manifest using explicit `containers-storage:` references to
+the loaded local images. Only then does it update the distribution tag and
 `latest`. A failed or incomplete platform build cannot replace a public
 manifest.
 
