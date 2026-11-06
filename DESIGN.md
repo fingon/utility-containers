@@ -113,6 +113,13 @@ entrypoint will not recursively change ownership of existing data.
 
 ## Build and publication
 
+### Dependency updates
+
+Dependabot checks GitHub Actions dependencies weekly and groups all available
+updates, including major versions, into one pull request. Container base images
+continue to track Debian stable through the daily build workflow. Shell-installed
+tools and prek hooks are managed separately.
+
 ### Triggers
 
 The container workflow builds and tests both images for pull requests, pushes
